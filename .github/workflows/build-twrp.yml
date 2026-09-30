@@ -51,9 +51,25 @@ jobs:
             git-core gnupg flex bison build-essential zip curl zlib1g-dev \
             libc6-dev-i386 libncurses5 lib32ncurses5-dev x11proto-core-dev \
             libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc \
-            unzip fontconfig python3 python-is-python3 bc rsync ccache \
+            unzip fontconfig python3 bc rsync ccache \
             imagemagick libssl-dev python3-lib2to3 \
-            lib32readline-dev liblz4-tool gperf g++-multilib gcc-multilib
+            lib32readline-dev liblz4-tool gperf g++-multilib gcc-multilib \
+            software-properties-common
+
+          # ★★★ 关键：装 Python 2.7（AOSP 8.1 的构建脚本是 Python 2 语法）
+          # Ubuntu 22.04 官方源已移除 python2，需从 deadsnakes PPA 装。
+          # 这让 AOSP 8.1 用它本该用的 Python 2，避免逐个修补 Python 2 语法脚本。
+          sudo add-apt-repository -y ppa:deadsnakes/ppa
+          sudo apt-get update
+          sudo apt-get install -y python2.7 python2.7-dev
+
+          # 让 `python` 指向 Python 2.7（AOSP 8.1 脚本大量裸调 `python`）
+          # 同时覆盖 /usr/local/bin（PATH 优先）和 /usr/bin（shebang 常见路径）
+          sudo ln -sf /usr/bin/python2.7 /usr/local/bin/python
+          sudo ln -sf /usr/bin/python2.7 /usr/bin/python
+          echo "=== 版本确认 ==="
+          which python; python --version 2>&1 || true
+          python3 --version
           echo "=== Java 版本 ==="
           java -version 2>&1 || true
 
@@ -64,6 +80,11 @@ jobs:
           mkdir -p ~/bin
           curl -s https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
           chmod a+x ~/bin/repo
+          # ★ 新版 repo 需要 Python 3，但 AOSP 8.1 脚本要 Python 2。
+          #   把 `python` 指向 python2.7 后，必须强制 repo 用 python3，
+          #   否则 `repo sync` 会崩。
+          sed -i '1s|^#!/usr/bin/env python.*|#!/usr/bin/env python3|' ~/bin/repo
+          head -1 ~/bin/repo
           echo "$HOME/bin" >> $GITHUB_PATH
 
       - name: 缓存 repo 源码（可选，加速）
@@ -88,24 +109,16 @@ jobs:
           echo "=== 源码同步完成 ==="
           du -sh ~/twrp
 
-      - name: 修复 Python 2 遗留脚本（关键！）
+      - name: 兜底修复 Python 2 语法（软步骤）
         run: |
-          # TWRP 8.1 (Android 8.1, 2017~2018 年) 的辅助脚本是 Python 2 写的，
-          # 而 Ubuntu 22.04 runner 只有 Python 3，直接跑会报
-          #   SyntaxError: multiple exception types must be parenthesized
-          # 实例：vendor/omni/build/tools/roomservice.py 第 109 / 166 行
-          #        except IOError, ES.ParseError:
-          # lunch 阶段会调用 roomservice.py → 语法错误 → lunch 失败 → 编译中止
+          # 主方案：workflow 已装 Python 2.7 并把 `python` 指向它，
+          # 所以 AOSP 8.1 的 Python 2 脚本本就能跑。
+          # 这里是**兜底**：把 except A, B: 统一改成 except (A, B):
+          # （带括号的写法 Py2.6+ / Py3 都支持，不破坏任何东西）
           cd ~/twrp
-          python3 "$GITHUB_WORKSPACE/fix_python2.py"
-          echo "=== 复查 roomservice.py ==="
+          python3 "$GITHUB_WORKSPACE/fix_python2.py" || true
+          echo "=== roomservice.py 前 20 个 except ==="
           grep -n 'except' vendor/omni/build/tools/roomservice.py | head -20 || true
-          echo "=== 硬校验：修复必须生效，否则立刻失败 ==="
-          if grep -qE '^\s*except\s+[A-Za-z_][\w.]*\s*,\s*[A-Za-z_][\w.]*\s*:' vendor/omni/build/tools/roomservice.py; then
-            echo "::error::roomservice.py 仍有 Python 2 语法，修复脚本未生效！"
-            exit 1
-          fi
-          python3 -m py_compile vendor/omni/build/tools/roomservice.py && echo "  OK: roomservice.py 语法通过"
 
       - name: 放入设备树
         run: |
