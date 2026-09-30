@@ -100,8 +100,12 @@ jobs:
           python3 "$GITHUB_WORKSPACE/fix_python2.py"
           echo "=== 复查 roomservice.py ==="
           grep -n 'except' vendor/omni/build/tools/roomservice.py | head -20 || true
-          echo "=== 语法自检（关键脚本）==="
-          python3 -m py_compile vendor/omni/build/tools/roomservice.py && echo "  OK: roomservice.py" || echo "  仍有错: roomservice.py"
+          echo "=== 硬校验：修复必须生效，否则立刻失败 ==="
+          if grep -qE '^\s*except\s+[A-Za-z_][\w.]*\s*,\s*[A-Za-z_][\w.]*\s*:' vendor/omni/build/tools/roomservice.py; then
+            echo "::error::roomservice.py 仍有 Python 2 语法，修复脚本未生效！"
+            exit 1
+          fi
+          python3 -m py_compile vendor/omni/build/tools/roomservice.py && echo "  OK: roomservice.py 语法通过"
 
       - name: 放入设备树
         run: |
