@@ -38,6 +38,12 @@ jobs:
           echo "=== 释放后 ==="
           df -h /
 
+      - name: 安装 JDK 8（AOSP 8.1 编译必需）
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+
       - name: 安装依赖
         run: |
           sudo apt-get update
@@ -46,7 +52,10 @@ jobs:
             libc6-dev-i386 libncurses5 lib32ncurses5-dev x11proto-core-dev \
             libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc \
             unzip fontconfig python3 python-is-python3 bc rsync ccache \
-            imagemagick libssl-dev
+            imagemagick libssl-dev python3-lib2to3 \
+            lib32readline-dev liblz4-tool gperf g++-multilib gcc-multilib
+          echo "=== Java 版本 ==="
+          java -version 2>&1 || true
 
       - name: 配置 git 与 repo
         run: |
@@ -67,7 +76,6 @@ jobs:
             twrp-repo-${{ github.event.inputs.manifest_branch || 'twrp-8.1' }}-
 
       - name: 同步 TWRP 源码
-        continue-on-error: true
         run: |
           BRANCH="${{ github.event.inputs.manifest_branch || 'twrp-8.1' }}"
           mkdir -p ~/twrp && cd ~/twrp
@@ -79,6 +87,21 @@ jobs:
           done
           echo "=== 源码同步完成 ==="
           du -sh ~/twrp
+
+      - name: 修复 Python 2 遗留脚本（关键！）
+        run: |
+          # TWRP 8.1 (Android 8.1, 2017~2018 年) 的辅助脚本是 Python 2 写的，
+          # 而 Ubuntu 22.04 runner 只有 Python 3，直接跑会报
+          #   SyntaxError: multiple exception types must be parenthesized
+          # 实例：vendor/omni/build/tools/roomservice.py 第 109 / 166 行
+          #        except IOError, ES.ParseError:
+          # lunch 阶段会调用 roomservice.py → 语法错误 → lunch 失败 → 编译中止
+          cd ~/twrp
+          python3 "$GITHUB_WORKSPACE/fix_python2.py"
+          echo "=== 复查 roomservice.py ==="
+          grep -n 'except' vendor/omni/build/tools/roomservice.py | head -20 || true
+          echo "=== 语法自检（关键脚本）==="
+          python3 -m py_compile vendor/omni/build/tools/roomservice.py && echo "  OK: roomservice.py" || echo "  仍有错: roomservice.py"
 
       - name: 放入设备树
         run: |
@@ -98,8 +121,13 @@ jobs:
           CODENAME="${{ github.event.inputs.device_codename || 'MS600' }}"
           cd ~/twrp
           source build/envsetup.sh
+          # 设备树没有 dependencies 文件，必须允许缺失依赖，否则 lunch 会失败
+          export ALLOW_MISSING_DEPENDENCIES=true
+          export LC_ALL=C
           lunch omni_${CODENAME}-eng
+          echo "=== 开始编译 ==="
           # 16GB 内存给 -j4 稳妥
+          set -o pipefail
           mka recoveryimage -j4 2>&1 | tee build.log
           echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
 
