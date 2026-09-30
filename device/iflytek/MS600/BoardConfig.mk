@@ -89,7 +89,12 @@ TW_DEFAULT_LANGUAGE := zh_CN
 TW_USE_TWRP_NETWORK := true
 
 # SELinux
-BOARD_SEPOLICY_DIRS := device/iflytek/MS600/sepolicy
+# ⚠️ 暂不启用自定义 sepolicy：本项目写的 device.te 里重复声明了
+#    boot_block_device 等类型（TWRP 通用策略已定义），导致编译报
+#      ERROR 'Duplicate declaration of type'
+#    TWRP 自带的 recovery 域策略已足够首次编译/启动。
+#    等 TWRP 跑起来后若发现权限不足，再针对性补 allow 规则。
+# BOARD_SEPOLICY_DIRS := device/iflytek/MS600/sepolicy
 
 # 分区大小（来自本机实测 partitions.txt / 分区镜像）
 # system  : 3145728 KB = 3.0 GB
