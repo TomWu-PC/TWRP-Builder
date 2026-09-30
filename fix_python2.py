@@ -33,11 +33,14 @@ import pathlib
 
 # except A, B:  /  except A, B, C:   ->  except (A, B, C):
 # 只在行首缩进后出现 except 且逗号分隔多个异常类型时匹配
+# ★ 必须加 re.MULTILINE，否则 ^ 只匹配整个文本开头，多行源码里一处都改不到！
 PAT = re.compile(
-    r'^(\s*)except\s+([A-Za-z_][\w.]*(?:\s*,\s*[A-Za-z_][\w.]*)+)\s*:'
+    r'^(\s*)except\s+([A-Za-z_][\w.]*(?:\s*,\s*[A-Za-z_][\w.]*)+)\s*:',
+    re.MULTILINE,
 )
 
 SKIP_DIRS = {'.repo', 'out', '.git'}
+SKIP_FILES = {os.path.abspath(__file__), 'fix_python2.py'}
 
 
 def fix_all(root='.'):
@@ -47,6 +50,8 @@ def fix_all(root='.'):
         dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
         for fn in filenames:
             if not fn.endswith('.py'):
+                continue
+            if fn in SKIP_FILES:          # 跳过脚本自身
                 continue
             p = os.path.join(dirpath, fn)
             scanned += 1
