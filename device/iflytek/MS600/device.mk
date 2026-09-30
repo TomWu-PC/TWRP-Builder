@@ -5,11 +5,9 @@
 LOCAL_PATH := device/iflytek/MS600
 
 # 包含 BoardConfig 里定义的平台（在 TWRP 树中，这些通常由 vendor/qcom 提供）
-# 注意：TWRP 最小树（minimal manifest）不含完整 vendor/qcom，需要靠 prebuilt
-# 这里的 device.mk 只做最小必要的产品配置。
-
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/recovery.fstab:$(TARGET_COPY_OUT_RECOVERY)/root/etc/recovery.fstab
+# 注意：TWRP 会自动把 BoardConfig 里 TARGET_RECOVERY_FSTAB 指定的 fstab
+# 装进 recovery ramdisk 的 /etc/recovery.fstab，这里不要重复 COPY，
+# 否则会覆盖 TWRP 自己生成的 fstab（含 /etc/twrp.fstab 合并逻辑）。
 
 # TWRP 语言
 PRODUCT_DEFAULT_LANGUAGE := zh_CN
