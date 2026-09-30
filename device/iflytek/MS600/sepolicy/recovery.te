@@ -1,19 +1,20 @@
-# TWRP sepolicy for MS600
-# 基于 TWRP 通用 recovery sepolicy + 原厂 device_contexts
+# TWRP sepolicy for MS600 — recovery 域附加规则
+#
+# ⚠️ 不要重复声明 type recovery, domain; / type recovery_exec, exec_type, file_type;
+#    / type toolbox, domain; —— TWRP 源码树的通用策略里已有定义，
+#    重复声明会报 ERROR 'Duplicate declaration of type'。
+#
+# 这里只写 allow 规则（给已有类型加权限）。
 
-type recovery, domain;
-type recovery_exec, exec_type, file_type;
-type toolbox, domain;
-
-# TWRP 需要访问 boot/recovery 分区
+# TWRP 需要访问各分区块设备
 allow recovery block_device:dir r_dir_perms;
 allow recovery boot_block_device:blk_file rw_file_perms;
 allow recovery recovery_block_device:blk_file rw_file_perms;
 allow recovery misc_block_device:blk_file rw_file_perms;
 allow recovery userdata_block_device:blk_file rw_file_perms;
 
-# 允许写成 TWRP 需要的文件
+# 允许读取系统文件
 allow recovery system_file:file rx_file_perms;
 
-# 允许 root 操作
+# 调试期宽松模式（正式版可去掉）
 permissive recovery;
