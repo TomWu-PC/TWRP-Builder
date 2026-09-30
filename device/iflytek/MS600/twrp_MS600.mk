@@ -1,0 +1,33 @@
+# TWRP 编译标志 — MS600
+# 这些变量控制 TWRP 的构建行为
+
+# 语言
+TW_EXTRA_LANGUAGES := true
+TW_DEFAULT_LANGUAGE := zh_CN
+
+# 屏幕与亮度
+TW_THEME := portrait_hdpi
+TW_SCREEN_BLANK_ON_BOOT := true
+TW_BRIGHTNESS_PATH := "/sys/class/backlight/panel0-backlight/brightness"
+TW_MAX_BRIGHTNESS := 255
+TW_DEFAULT_BRIGHTNESS := 140
+
+# 功能开关
+TW_INCLUDE_CRYPTO := true
+TW_INCLUDE_FUSE_EXFAT := true
+TW_INCLUDE_NTFS_3G := true
+TW_EXCLUDE_TWRPAPP := true
+TW_USE_TOOLBOX := true
+TW_HAS_DOWNLOAD_MODE := true
+TW_USE_TWRP_NETWORK := true
+TW_INCLUDE_REPACKTOOLS := true
+TW_INCLUDE_RESETPROP := true
+TW_INCLUDE_LIBRESETPROP := true
+TW_USE_MODEL_HARDWARE_ID_FOR_DEVICE_ID := true
+
+# 备份与恢复
+TW_EXTRA_LANGUAGES := true
+TW_NO_SCREEN_BLANK := false
+
+# 设备信息
+TW_DEVICE_VERSION := V1-MS600-WorkBuddy

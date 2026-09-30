@@ -1,0 +1,7 @@
+type boot_block_device, dev_type;
+type recovery_block_device, dev_type;
+type misc_block_device, dev_type;
+type system_block_device, dev_type;
+type vendor_block_device, dev_type;
+type userdata_block_device, dev_type;
+type cache_block_device, dev_type;

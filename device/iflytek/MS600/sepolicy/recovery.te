@@ -1,0 +1,19 @@
+# TWRP sepolicy for MS600
+# 基于 TWRP 通用 recovery sepolicy + 原厂 device_contexts
+
+type recovery, domain;
+type recovery_exec, exec_type, file_type;
+type toolbox, domain;
+
+# TWRP 需要访问 boot/recovery 分区
+allow recovery block_device:dir r_dir_perms;
+allow recovery boot_block_device:blk_file rw_file_perms;
+allow recovery recovery_block_device:blk_file rw_file_perms;
+allow recovery misc_block_device:blk_file rw_file_perms;
+allow recovery userdata_block_device:blk_file rw_file_perms;
+
+# 允许写成 TWRP 需要的文件
+allow recovery system_file:file rx_file_perms;
+
+# 允许 root 操作
+permissive recovery;

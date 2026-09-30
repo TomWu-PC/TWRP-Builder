@@ -1,0 +1,17 @@
+# TWRP recovery.fstab for iFlytek MS600 (讯飞听见 L1)
+# 基于本机实测 recovery.fstab + 分区 by-name 映射生成
+# A-only 设备，Android 8.1
+
+# <mount point>  <fstype>  <device>  <device2>  <options>
+/system   ext4   /dev/block/bootdevice/by-name/system        flags=display="System";slotselect
+/vendor   ext4   /dev/block/bootdevice/by-name/vendor        flags=display="Vendor"
+/cache    ext4   /dev/block/bootdevice/by-name/cache         flags=display="Cache";wipeingui
+/data     ext4   /dev/block/bootdevice/by-name/userdata      flags=display="Data";wipeingui;mounttodecrypt;fsflags="noatime,nosuid,nodev,barrier=1,data=ordered,noauto_da_alloc"
+/boot     emmc   /dev/block/bootdevice/by-name/boot          flags=display="Boot"
+/recovery emmc   /dev/block/bootdevice/by-name/recovery      flags=display="Recovery"
+/misc     emmc   /dev/block/bootdevice/by-name/misc          flags=display="Misc"
+/persist  ext4   /dev/block/bootdevice/by-name/persist       flags=display="Persist"
+/modem    emmc   /dev/block/bootdevice/by-name/modem         flags=display="Modem"
+/oem      ext4   /dev/block/bootdevice/by-name/oem           flags=display="OEM"
+/sdcard   vfat   /dev/block/mmcblk1p1                        flags=display="Micro SDcard";storage;wipeingui;removable
+/usb-otg  auto   /dev/block/sda1                            flags=display="USB OTG";storage;wipeingui;removable
