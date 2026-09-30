@@ -1,0 +1,21 @@
+# 强制 shell 脚本和 Makefile 使用 LF（Linux 编译必需）
+*.sh text eol=lf
+*.mk text eol=lf
+*.rc text eol=lf
+*.fstab text eol=lf
+*.te text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+file_contexts text eol=lf
+vendorsetup.sh text eol=lf
+AndroidProducts.mk text eol=lf
+BoardConfig.mk text eol=lf
+device.mk text eol=lf
+
+# 二进制文件不转换
+*.png binary
+*.jpg binary
+*.dtb binary
+*.fdt binary
+kernel binary
+*.bin binary
