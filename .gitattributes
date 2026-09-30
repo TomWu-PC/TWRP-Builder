@@ -6,6 +6,7 @@
 *.te text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+*.py text eol=lf
 file_contexts text eol=lf
 vendorsetup.sh text eol=lf
 AndroidProducts.mk text eol=lf
